@@ -1,20 +1,19 @@
 import React, { useRef, useState } from 'react';
-import './AuthForm.css';
-
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-// import { useNavigate } from 'react-router-dom';
+import './AuthForm.css';
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
   const authContext = useAuth();
+  const navigate = useNavigate();
 
   const emailInputRef = useRef();
   const passwordInputRef = useRef();
   const confirmPasswordInputRef = useRef();
 
-  // const navigate = useNavigate();
 
   const switchAuthModelHandler = () => {
     setIsLogin(!isLogin);
@@ -71,7 +70,10 @@ const AuthForm = () => {
       emailInputRef.current.value = '';
       passwordInputRef.current.value = '';
       confirmPasswordInputRef.current.value = '';
-      
+
+      // after successfully logged in Navigate to Welcome page
+      navigate('/welcome');
+
     } catch (error) {
       console.log(error.message);
     } finally {
