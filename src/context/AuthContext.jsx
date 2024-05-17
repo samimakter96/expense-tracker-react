@@ -10,6 +10,7 @@ const AuthContext = createContext({
 export const AuthContextProvider = ({ children }) => {
   const initialToken = localStorage.getItem('token');
   const [token, setToken] = useState(initialToken);
+  console.log(token);
 
   const userIsLoggedIn = !!token;
 

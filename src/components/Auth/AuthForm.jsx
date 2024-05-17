@@ -7,7 +7,7 @@ const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const authContext = useAuth();
+  const {login} = useAuth();
   const navigate = useNavigate();
 
   const emailInputRef = useRef();
@@ -63,7 +63,7 @@ const AuthForm = () => {
 
       const data = await response.json();
       setIsLoading(false);
-      authContext.login(data.idToken);
+      login(data.idToken);
       console.log('User Signed In successfully');
 
       // Clear input fields
