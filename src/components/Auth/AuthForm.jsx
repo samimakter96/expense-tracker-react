@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './AuthForm.css';
 
@@ -133,6 +133,7 @@ const AuthForm = () => {
           >
             {isLogin ? 'Create new account' : 'Login with existing account'}
           </button>
+          <Link to='/forgot-password'>Forgot Password</Link>
         </div>
       </form>
     </section>

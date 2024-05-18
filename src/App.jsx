@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import AuthForm from "./components/Auth/AuthForm"
 import Welcome from "./pages/Welcome"
 import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
 function App() {
 
   return (
@@ -12,6 +13,7 @@ function App() {
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<AuthForm />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Routes>
       </Router>
     </>
