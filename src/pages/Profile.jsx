@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 const Profile = () => {
   const [userName, setUserName] = useState('');
   const [link, setLink] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
 
   const { token } = useAuth();
 
@@ -38,6 +39,38 @@ const Profile = () => {
     getBackData();
   }, []);
 
+
+  const sendEmailVerification = async () => {
+    try {
+      const response = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyDkLA_tpv-opoyekVUD2RFipAwk_2Uu1KU`, 
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            requestType: 'VERIFY_EMAIL',
+            idToken: token,
+            returnSecureToken: true,
+          })
+        }
+      );
+
+      if (!response.ok) {
+        alert('Failed ot sed verification email!')
+      }
+
+      const data = await response.json();
+      console.log('Verification email sent', data);
+      alert('Verification email sent. Please check your inbox.')
+
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    }
+  };
+
+
   const profileDataHandler = async (event) => {
     event.preventDefault();
 
@@ -59,13 +92,13 @@ const Profile = () => {
       );
 
       if (!response.ok) {
-        throw new Error('Failed to update profile!');
+        alert('Failed to update profile!');
       }
 
       const data = await response.json();
       console.log('Profile updated successfully', data);
     } catch (error) {
-      console.log(error.message);
+       alert(`Error: ${error.message}`);
     }
   };
 
@@ -120,10 +153,21 @@ const Profile = () => {
             </div>
           </div>
 
+          {!emailVerified && (
+            <button
+              type="submit"
+              style={{ marginLeft: '25rem' }}
+              className="btn mt-3 btn-warning p-2"
+              onClick={sendEmailVerification}
+            >
+              Verify Email
+            </button>
+          )}
+
           <button
             type="submit"
             style={{ marginLeft: '25rem' }}
-            className="btn mt-3 btn-danger p-2 "
+            className="btn mt-4 btn-danger p-2"
           >
             Update
           </button>
