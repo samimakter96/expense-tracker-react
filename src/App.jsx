@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import AuthForm from "./components/Auth/AuthForm"
-import Welcome from "./pages/Welcome"
-import Profile from "./pages/Profile";
+import Welcome from "./pages/Welcome/Welcome";
+import Profile from "./pages/Profile/Profile";
 import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
 function App() {
 
