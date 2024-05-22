@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import ExpenseList from './ExpenseList';
+import axios from 'axios';
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
@@ -8,6 +9,48 @@ const Expenses = () => {
   const amountInputRef = useRef();
   const descriptionInputRef = useRef();
   const categoryInputRef = useRef();
+
+  const enteredEmail = localStorage
+    .getItem('email')
+    .replace('@', '')
+    .replace('.', '');
+
+  // Whenever the user refreshes the page do a GET request and get all the previously added expenses that were there
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          `https://expense-tracker-react-14b3c-default-rtdb.firebaseio.com/${enteredEmail}.json`
+        );
+
+        const result = response.data;
+
+        if (result) {
+          const storedData = Object.values(result);
+          setExpenses(storedData);
+          // console.log(storedData);
+        } else {
+          setExpenses([]);
+        }
+      } catch (error) {
+        console.log('Error fetching data', error);
+      }
+    };
+
+    fetchData();
+  }, [enteredEmail]);
+
+  // Store the data to the database
+  const addData = async (expense) => {
+    try {
+      await axios.post(
+        `https://expense-tracker-react-14b3c-default-rtdb.firebaseio.com/${enteredEmail}.json`,
+        expense
+      );
+    } catch (error) {
+      console.log('Error creating data', error);
+    }
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -21,9 +64,10 @@ const Expenses = () => {
       description: enteredDescription,
       category: enteredCategory,
     };
-    setExpenses((prevExpenses) => {
-      return [...prevExpenses, expenseData];
-    });
+
+    setExpenses((prevExpenses) => [...prevExpenses, expenseData]);
+
+    addData(expenseData);
   };
 
   return (
@@ -41,7 +85,7 @@ const Expenses = () => {
             </label>
             <input
               className="form-control"
-              type="text"
+              type="number"
               id="amount"
               required
               ref={amountInputRef}
@@ -49,7 +93,7 @@ const Expenses = () => {
           </div>
           <div className="control">
             <label htmlFor="description" className="form-label">
-              Expense description
+              Expense Description
             </label>
             <input
               className="form-control"
@@ -61,7 +105,7 @@ const Expenses = () => {
           </div>
           <div className="control">
             <label htmlFor="category" className="form-label">
-              Expense category
+              Expense Category
             </label>
             <select
               className="form-select"
@@ -69,8 +113,9 @@ const Expenses = () => {
               id="category"
               required
               ref={categoryInputRef}
+              defaultValue=""
             >
-              <option value="" disabled selected>
+              <option value="" disabled>
                 Choose a category
               </option>
               <option value="food">Food</option>

@@ -64,6 +64,7 @@ const AuthForm = () => {
       const data = await response.json();
       setIsLoading(false);
       login(data.idToken);
+      localStorage.setItem('email', enteredEmail)
       console.log('User Signed In successfully');
 
       // Clear input fields
