@@ -1,21 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import ExpenseList from './ExpenseList';
-import axios from 'axios';
+import axios from 'axios'; // Importing Axios for HTTP requests
 
 const Expenses = () => {
-  const [expenses, setExpenses] = useState([]);
+  const [expenses, setExpenses] = useState([]); // State to hold expenses data
 
+  // Refs for input fields
   const amountInputRef = useRef();
   const descriptionInputRef = useRef();
   const categoryInputRef = useRef();
 
+  // Get entered email from localStorage and format it
   const enteredEmail = localStorage
     .getItem('email')
     .replace('@', '')
     .replace('.', '');
 
-  // Whenever the user refreshes the page do a GET request and get all the previously added expenses that were there
+  // Fetch data from Firebase when component mounts or when enteredEmail changes
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -26,11 +27,16 @@ const Expenses = () => {
         const result = response.data;
 
         if (result) {
-          const storedData = Object.values(result);
+          // Map fetched data to array of expenses and setExpenses state
+          const storedData = Object.entries(result).map(
+            ([firebaseId, value]) => ({
+              ...value,
+              firebaseId, // Use Firebase ID as the unique identifier
+            })
+          );
           setExpenses(storedData);
-          // console.log(storedData);
         } else {
-          setExpenses([]);
+          setExpenses([]); // If no data found, set expenses to empty array
         }
       } catch (error) {
         console.log('Error fetching data', error);
@@ -38,36 +44,79 @@ const Expenses = () => {
     };
 
     fetchData();
-  }, [enteredEmail]);
+  }, [enteredEmail]); // Trigger useEffect when enteredEmail changes
 
-  // Store the data to the database
+  // Function to add new expense to Firebase and update state
   const addData = async (expense) => {
     try {
-      await axios.post(
+      // Send POST request to Firebase
+      const response = await axios.post(
         `https://expense-tracker-react-14b3c-default-rtdb.firebaseio.com/${enteredEmail}.json`,
         expense
       );
+      expense.firebaseId = response.data.name; // Assign Firebase ID to expense
+      setExpenses((prevExpenses) => [...prevExpenses, expense]); // Add expense to state
     } catch (error) {
       console.log('Error creating data', error);
     }
   };
 
+  // Function to delete expense from Firebase and update state
+  const deleteExpense = async (firebaseId) => {
+    try {
+      // Send DELETE request to Firebase
+      await axios.delete(
+        `https://expense-tracker-react-14b3c-default-rtdb.firebaseio.com/${enteredEmail}/${firebaseId}.json`
+      );
+      // Filter out deleted expense and update state
+      setExpenses((prevExpenses) =>
+        prevExpenses.filter((expense) => expense.firebaseId !== firebaseId)
+      );
+    } catch (error) {
+      console.log('Error deleting data', error);
+    }
+  };
+
+  // Function to edit expense in Firebase and update state
+  const editExpense = async (firebaseId, updatedExpense) => {
+    try {
+      // Send PUT request to Firebase
+      await axios.put(
+        `https://expense-tracker-react-14b3c-default-rtdb.firebaseio.com/${enteredEmail}/${firebaseId}.json`,
+        updatedExpense
+      );
+      // Update expense in state
+      setExpenses((prevExpenses) =>
+        prevExpenses.map((expense) =>
+          expense.firebaseId === firebaseId ? updatedExpense : expense
+        )
+      );
+    } catch (error) {
+      console.log('Error editing data', error);
+    }
+  };
+
+  // Function to handle form submission
   const handleSubmit = (event) => {
     event.preventDefault();
+    // Get values from input fields
     const enteredAmount = amountInputRef.current.value;
     const enteredDescription = descriptionInputRef.current.value;
     const enteredCategory = categoryInputRef.current.value;
 
+    // Create expense object
     const expenseData = {
-      id: uuidv4(),
       amount: enteredAmount,
       description: enteredDescription,
       category: enteredCategory,
     };
 
-    setExpenses((prevExpenses) => [...prevExpenses, expenseData]);
+    addData(expenseData); // Add expense to Firebase and update state
 
-    addData(expenseData);
+    // Clear input fields after submission
+    amountInputRef.current.value = '';
+    descriptionInputRef.current.value = '';
+    categoryInputRef.current.value = '';
   };
 
   return (
@@ -79,6 +128,7 @@ const Expenses = () => {
           style={{ width: '400px' }}
           className="mt-2"
         >
+          {/* Input fields for expense data */}
           <div className="control">
             <label htmlFor="amount" className="form-label">
               Expense Amount
@@ -128,6 +178,7 @@ const Expenses = () => {
             </select>
           </div>
 
+          {/* Submit button */}
           <div className="d-flex justify-content-center">
             <button
               type="submit"
@@ -138,8 +189,13 @@ const Expenses = () => {
           </div>
         </form>
 
+        {/* Display list of expenses */}
         <div style={{ width: '400px' }} className="mt-4">
-          <ExpenseList expenses={expenses} />
+          <ExpenseList
+            expenses={expenses}
+            onDelete={deleteExpense} // Pass deleteExpense function as prop
+            onEdit={editExpense} // Pass editExpense function as prop
+          />
         </div>
       </div>
     </div>
