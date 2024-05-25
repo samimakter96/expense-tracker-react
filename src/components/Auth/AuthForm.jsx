@@ -1,13 +1,14 @@
 import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useDispatch } from 'react-redux';
+import { login } from '../../store/authSlice';
 import './AuthForm.css';
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const {login} = useAuth();
+  const dispatch = useDispatch()
   const navigate = useNavigate();
 
   const emailInputRef = useRef();
@@ -63,7 +64,7 @@ const AuthForm = () => {
 
       const data = await response.json();
       setIsLoading(false);
-      login(data.idToken);
+      dispatch(login(data.idToken));
       localStorage.setItem('email', enteredEmail)
       console.log('User Signed In successfully');
 

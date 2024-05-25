@@ -1,16 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Expenses from '../../components/Expense/ExpenseForm';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../store/authSlice';
 
 const Welcome = () => {
 
-  const authContext = useAuth()
+  const dispatch = useDispatch()
   const navigate = useNavigate()
 
   const logOutHandler = () => {
-    authContext.logout();
+    dispatch(logout());
     navigate('/login')
   }
 

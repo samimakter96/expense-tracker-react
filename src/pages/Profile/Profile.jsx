@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 
 const Profile = () => {
   const [userName, setUserName] = useState('');
   const [link, setLink] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
 
-  const { token } = useAuth();
+
+  const token = useSelector((state) => state.auth.token)
 
   const getBackData = async () => {
     try {
