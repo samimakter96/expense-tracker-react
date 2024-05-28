@@ -110,7 +110,7 @@ const Profile = () => {
           Winners never quit, Quitters never win.
         </p>
         <div
-          className="w-25 p-1 mx-4 border rounded-4"
+          className="w-25 p-1 border rounded-4"
           style={{ backgroundColor: '#eecbcb' }}
         >
           Your Profile is 64% completed. A complete Profile has higher chances

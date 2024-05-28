@@ -1,9 +1,24 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import ExpenseList from './ExpenseList';
 import axios from 'axios'; // Importing Axios for HTTP requests
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  addExpense,
+  deleteExpense,
+  editExpense,
+  setExpenses,
+  activatePremium,
+} from '../../store/expenseSlice';
+import { toggleDarkMode } from '../../store/themeSlice';
 
 const Expenses = () => {
-  const [expenses, setExpenses] = useState([]); // State to hold expenses data
+  // const [expenses, setExpenses] = useState([]); // State to hold expenses data
+
+  const dispatch = useDispatch();
+  const expenses = useSelector((state) => state.expenses.expenses);
+  const totalAmount = useSelector((state) => state.expenses.totalAmount);
+  const isPremium = useSelector((state) => state.expenses.isPremium);
+  // const darkMode = useSelector((state) => state.theme.darkMode);
 
   // Refs for input fields
   const amountInputRef = useRef();
@@ -34,9 +49,9 @@ const Expenses = () => {
               firebaseId, // Use Firebase ID as the unique identifier
             })
           );
-          setExpenses(storedData);
+          dispatch(setExpenses(storedData));
         } else {
-          setExpenses([]); // If no data found, set expenses to empty array
+          dispatch(setExpenses([])); // If no data found, set expenses to empty array
         }
       } catch (error) {
         console.log('Error fetching data', error);
@@ -44,7 +59,7 @@ const Expenses = () => {
     };
 
     fetchData();
-  }, [enteredEmail]); // Trigger useEffect when enteredEmail changes
+  }, [dispatch, enteredEmail]); // Trigger useEffect when enteredEmail changes
 
   // Function to add new expense to Firebase and update state
   const addData = async (expense) => {
@@ -55,42 +70,34 @@ const Expenses = () => {
         expense
       );
       expense.firebaseId = response.data.name; // Assign Firebase ID to expense
-      setExpenses((prevExpenses) => [...prevExpenses, expense]); // Add expense to state
+      dispatch(addExpense(expense)); // Add expense to state
     } catch (error) {
       console.log('Error creating data', error);
     }
   };
 
   // Function to delete expense from Firebase and update state
-  const deleteExpense = async (firebaseId) => {
+  const handleDelete = async (firebaseId) => {
     try {
       // Send DELETE request to Firebase
       await axios.delete(
         `https://expense-tracker-react-14b3c-default-rtdb.firebaseio.com/${enteredEmail}/${firebaseId}.json`
       );
-      // Filter out deleted expense and update state
-      setExpenses((prevExpenses) =>
-        prevExpenses.filter((expense) => expense.firebaseId !== firebaseId)
-      );
+      dispatch(deleteExpense(firebaseId));
     } catch (error) {
       console.log('Error deleting data', error);
     }
   };
 
   // Function to edit expense in Firebase and update state
-  const editExpense = async (firebaseId, updatedExpense) => {
+  const handleEdit = async (firebaseId, updatedExpense) => {
     try {
       // Send PUT request to Firebase
       await axios.put(
         `https://expense-tracker-react-14b3c-default-rtdb.firebaseio.com/${enteredEmail}/${firebaseId}.json`,
         updatedExpense
       );
-      // Update expense in state
-      setExpenses((prevExpenses) =>
-        prevExpenses.map((expense) =>
-          expense.firebaseId === firebaseId ? updatedExpense : expense
-        )
-      );
+      dispatch(editExpense({ firebaseId, updatedExpense }));
     } catch (error) {
       console.log('Error editing data', error);
     }
@@ -119,13 +126,44 @@ const Expenses = () => {
     categoryInputRef.current.value = '';
   };
 
+  const handleActivatePremium = () => {
+    dispatch(activatePremium());
+    dispatch(toggleDarkMode());
+  };
+
+  const handleToggleDarkMode = () => {
+    dispatch(toggleDarkMode());
+  };
+
+  const downloadCSV = () => {
+    const csvContent = [
+      ['Description', 'Amount', 'Category'],
+      ...expenses.map((expense) => [
+        expense.description,
+        expense.amount,
+        expense.category,
+      ]),
+    ]
+      .map((e) => e.join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'expenses.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div>
       <div className="container d-flex flex-column justify-content-center align-items-center mt-3">
         <h2 className="h1 mt-5">Expense Tracker</h2>
         <form
           onSubmit={handleSubmit}
-          style={{ width: '400px' }}
+          style={{ width: '500px' }}
           className="mt-2"
         >
           {/* Input fields for expense data */}
@@ -189,12 +227,38 @@ const Expenses = () => {
           </div>
         </form>
 
+        {totalAmount > 10000 &&  (
+          <div className="d-flex justify-content-center mt-3">
+            <button className="btn btn-warning" onClick={handleActivatePremium}>
+              Activate Premium
+            </button>
+          </div>
+        )}
+
+        {isPremium && (
+          <>
+            <div className="d-flex justify-content-center mt-3">
+              <button
+                className="btn btn-secondary"
+                onClick={handleToggleDarkMode}
+              >
+                Toggle Dark Mode
+              </button>
+            </div>
+            <div className="d-flex justify-content-center mt-3">
+              <button className="btn btn-info" onClick={downloadCSV}>
+                Download CSV
+              </button>
+            </div>
+          </>
+        )}
+
         {/* Display list of expenses */}
-        <div style={{ width: '400px' }} className="mt-4">
+        <div style={{ width: '500px' }} className="mt-4">
           <ExpenseList
             expenses={expenses}
-            onDelete={deleteExpense} // Pass deleteExpense function as prop
-            onEdit={editExpense} // Pass editExpense function as prop
+            onDelete={handleDelete} // Pass deleteExpense function as prop
+            onEdit={handleEdit} // Pass editExpense function as prop
           />
         </div>
       </div>
